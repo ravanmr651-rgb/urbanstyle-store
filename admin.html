@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UrbanStyle Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--ink:#14213d;--blue:#287cf0;--bg:#f4f7fb;--muted:#687386;--line:#e4e9f1;--white:#fff;--red:#c62828}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:#101820;color:white;padding:18px 16px}header .wrap{max-width:1000px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:21px;margin:0}header p{font-size:12px;color:#cbd5e1;margin:4px 0 0}
+main{max-width:1000px;margin:24px auto;padding:0 14px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 5px 20px #13294b08}
+h2{font-size:18px;margin:0 0 14px}.hint{color:var(--muted);font-size:13px;line-height:1.5}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:13px;font-weight:650;margin-bottom:6px}input,textarea,select{width:100%;padding:12px;border:1px solid #d7deea;border-radius:10px;background:#fff;font:inherit;color:var(--ink)}textarea{min-height:80px;resize:vertical}
+button{border:0;border-radius:10px;background:var(--blue);color:white;padding:11px 15px;font-weight:700;font-size:14px;cursor:pointer}button.secondary{background:#eaf1ff;color:#174ea6}button.danger{background:#fff0f0;color:var(--red)}button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.topactions{display:flex;gap:8px;align-items:center}.status{padding:11px 13px;border-radius:10px;background:#edf4ff;color:#174ea6;font-size:14px;margin-bottom:14px;white-space:pre-wrap}.status.error{background:#fff0f0;color:#a51f1f}.status.ok{background:#e9f8ef;color:#176b36}.hidden{display:none!important}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}th{color:var(--muted);font-weight:700}td img{width:48px;height:48px;object-fit:cover;border-radius:8px;background:#eee}.pill{font-size:11px;padding:4px 7px;border-radius:20px;background:#edf4ff}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media(max-width:620px){.formgrid{grid-template-columns:1fr}main{margin:14px auto}.card{padding:14px}header .wrap{align-items:flex-start}h1{font-size:19px}}
+
+/* Luxury storefront companion admin theme */
+:root{--blue:#b99a5a;--ink:#1a1711;--muted:#7d7467;--line:#e2d8c7;--red:#9e3e34}
+body{font-family:'DM Sans',Arial,sans-serif;background:#f4f0e8;color:#1a1711}
+header{background:#15130f;color:#f5ecd9;border-bottom:1px solid #b99a5a66;box-shadow:0 9px 30px #21170d12}
+header h1{font-family:'Playfair Display',Georgia,serif;font-weight:500;letter-spacing:-.5px;color:#e5cc98}
+header p{color:#b9ad98}
+main{max-width:1280px}
+.card{background:#fcf9f2;border:1px solid #e1d6c3;border-radius:0;box-shadow:0 8px 30px #241a0b08}
+h2{font-family:'Playfair Display',Georgia,serif;font-weight:500}
+button{background:#b99a5a;color:#17140e;border-radius:0;text-transform:uppercase;letter-spacing:.8px;font-size:11px;transition:transform .25s,background .25s}
+button:hover{background:#d0b275;transform:translateY(-2px)}button.secondary{background:#eee4d2;color:#2e2619;border:1px solid #d4c4a6}button.danger{background:#fff0ed;color:#8a3026}
+input,textarea,select{background:#fffdf7;border:1px solid #d9cdb9;border-radius:0;color:#211c14}
+.status{background:#eee4d2;color:#66512f;border-left:3px solid #b99a5a;border-radius:0}.status.error{background:#fff0ed;color:#8d2a22}.status.ok{background:#e8f1e5;color:#375a2b}
+th{background:#f4edde;color:#7b694b}th,td{border-bottom:1px solid #e4dac9}table{background:#fffdf8}.pill{background:#eee4d2;color:#735a2e;border-radius:0}footer{color:#958975}
+@media(max-width:620px){.card{padding:14px}}
+
+</style>
+</head>
+<body>
+<header><div class="wrap"><div><h1>UrbanStyle <span style="color:#f5ecd9">Atelier</span> Admin</h1><p>Products manager</p></div><div class="topactions"><button id="logoutBtn" class="secondary hidden">Logout</button></div></div></header>
+<main>
+<div id="status" class="status">Supabase settings bhar kar login karein.</div>
+<section id="setup" class="card">
+<h2>1. Supabase connect karein</h2>
+<p class="hint">Apne Supabase project ki Project URL aur Publishable key bharein. Sirf publishable/anon public key use karein. Secret ya service_role key kabhi nahi.</p>
+<div class="formgrid">
+<div><label for="projectUrl">Project URL</label><input id="projectUrl" type="url" placeholder="https://xxxx.supabase.co" autocomplete="url"></div>
+<div><label for="publishableKey">Publishable key</label><input id="publishableKey" type="password" placeholder="sb_publishable_..." autocomplete="off"></div>
+</div>
+<div class="actions"><button id="connectBtn">Connect</button></div>
+<p class="hint">Is demo mein details sirf is page ke current session mein rehti hain; refresh karne par dobara bharni pad sakti hain.</p>
+</section>
+<section id="loginCard" class="card hidden">
+<h2>2. Owner login</h2>
+<div class="formgrid">
+<div><label for="email">Email</label><input id="email" type="email" autocomplete="username" placeholder="owner@example.com"></div>
+<div><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Supabase user password"></div>
+</div>
+<div class="actions"><button id="loginBtn">Login</button></div>
+<p class="hint">Apne Supabase Authentication → Users mein banaye user ka email/password use karein.</p>
+</section>
+<section id="productSection" class="hidden">
+<div class="card">
+<h2 id="formTitle">3. Naya product add karein</h2>
+<form id="productForm">
+<input id="productId" type="hidden">
+<div class="formgrid">
+<div><label for="name">Product name *</label><input id="name" required maxlength="120" placeholder="Classic Cotton T-shirt"></div>
+<div><label for="price">Price (₹) *</label><input id="price" required type="number" min="0" step="0.01" placeholder="799"></div>
+<div><label for="category">Category</label><input id="category" placeholder="Men / Women / Clothing"></div>
+<div><label for="stock">Stock quantity *</label><input id="stock" required type="number" min="0" step="1" value="1"></div>
+<div style="grid-column:1/-1"><label for="imageUrl">Image URL</label><input id="imageUrl" type="url" placeholder="https://..."></div>
+<div style="grid-column:1/-1"><label for="description">Description</label><textarea id="description" placeholder="Product ke baare mein details..."></textarea></div>
+<div><label for="active">Store par dikhayein?</label><select id="active"><option value="true">Haan, active</option><option value="false">Nahi, hide</option></select></div>
+</div>
+<div class="actions"><button type="submit" id="saveProductBtn">Product save karein</button><button type="button" class="secondary" id="clearBtn">Clear</button></div>
+</form>
+</div>
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Products</h2><button class="secondary" id="refreshBtn">Refresh</button></div>
+<p class="hint">Yahan sirf aapki shop ke products dikhne chahiye.</p>
+<div class="tablewrap"><table><thead><tr><th>Image</th><th>Product</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead><tbody id="productsBody"><tr><td colspan="6">Loading...</td></tr></tbody></table></div>
+</div>
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Customer Orders</h2><button class="secondary" id="refreshOrdersBtn">Refresh Orders</button></div>
+  <p class="hint">Customer ke delivery details aur COD orders yahan dikhte hain. Sirf authorized shop members orders dekh sakte hain.</p>
+  <div class="tablewrap"><table style="min-width:900px"><thead><tr><th>Order</th><th>Customer / Phone</th><th>Delivery Address</th><th>Items</th><th>Total</th><th>Status</th><th>Update</th></tr></thead><tbody id="ordersBody"><tr><td colspan="7">Login karke orders load karein.</td></tr></tbody></table></div>
+</div>
+</section>
+</main>
+<footer>UrbanStyle Admin Demo · Secure access depends on Supabase Row Level Security policies.</footer>
+<script>
+(() => {
+  let client = null;
+  let currentShopId = null;
+  let currentRole = null;
+  const $ = id => document.getElementById(id);
+  const status = (message, kind='') => {
+    $('status').textContent = message;
+    $('status').className = 'status' + (kind ? ' ' + kind : '');
+  };
+  function show(id, yes=true){ $(id).classList.toggle('hidden', !yes); }
+  function clearForm(){
+    $('productForm').reset(); $('productId').value=''; $('stock').value='1';
+    $('formTitle').textContent='3. Naya product add karein'; $('saveProductBtn').textContent='Product save karein';
+  }
+  $('connectBtn').addEventListener('click', async () => {
+    const url=$('projectUrl').value.trim(), key=$('publishableKey').value.trim();
+    if(!url || !key){status('Project URL aur publishable key dono bharein.','error');return;}
+    try{
+      client = window.supabase.createClient(url,key);
+      const {error}=await client.auth.getSession();
+      if(error) throw error;
+      show('loginCard',true);
+      status('Supabase connection ready. Ab owner login karein.','ok');
+    }catch(e){client=null;status('Connect nahi hua: '+e.message,'error');}
+  });
+  $('loginBtn').addEventListener('click', async () => {
+    if(!client){status('Pehle Supabase connect karein.','error');return;}
+    const email=$('email').value.trim(), password=$('password').value;
+    if(!email || !password){status('Email aur password bharein.','error');return;}
+    $('loginBtn').disabled=true;
+    try{
+      const {data,error}=await client.auth.signInWithPassword({email,password});
+      if(error) throw error;
+      const uid=data.user.id;
+      const {data:members,error:memberError}=await client.from('shop_members').select('shop_id,role').eq('user_id',uid);
+      if(memberError) throw memberError;
+      if(!members || members.length===0) throw new Error('Is user ko kisi shop se link nahi kiya gaya. Shop membership check karein.');
+      // This starter assumes this user belongs to one shop. If multiple memberships exist, pick the first.
+      currentShopId=members[0].shop_id; currentRole=members[0].role;
+      show('setup',false); show('loginCard',false); show('productSection',true); show('logoutBtn',true);
+      status('Login successful. Role: '+currentRole,'ok');
+      await loadProducts();
+      await loadOrders();
+    }catch(e){status('Login error: '+e.message,'error');}
+    finally{$('loginBtn').disabled=false;}
+  });
+  async function loadProducts(){
+    if(!client || !currentShopId)return;
+    $('productsBody').innerHTML='<tr><td colspan="6">Loading...</td></tr>';
+    const {data,error}=await client.from('products').select('id,name,price,stock,image_url,category,description,is_active,shop_id').eq('shop_id',currentShopId).order('created_at',{ascending:false});
+    if(error){status('Products load nahi hue: '+error.message,'error');$('productsBody').innerHTML='<tr><td colspan="6">Load error</td></tr>';return;}
+    if(!data.length){$('productsBody').innerHTML='<tr><td colspan="6">Abhi koi product nahi. Upar form se add karein.</td></tr>';return;}
+    $('productsBody').innerHTML='';
+    for(const p of data){
+      const tr=document.createElement('tr');
+      const image=document.createElement('img'); image.alt=''; image.src=p.image_url||''; image.onerror=()=>{image.style.visibility='hidden';};
+      const imageTd=document.createElement('td'); imageTd.append(image);
+      const nameTd=document.createElement('td'); nameTd.textContent=p.name;
+      const priceTd=document.createElement('td'); priceTd.textContent='₹'+Number(p.price).toLocaleString('en-IN');
+      const stockTd=document.createElement('td'); stockTd.textContent=p.stock;
+      const statusTd=document.createElement('td'); const pill=document.createElement('span');pill.className='pill';pill.textContent=p.is_active?'Active':'Hidden';statusTd.append(pill);
+      const actions=document.createElement('td');
+      const edit=document.createElement('button');edit.className='secondary';edit.textContent='Edit';edit.style.marginRight='6px';edit.onclick=()=>editProduct(p);
+      actions.append(edit);
+      if(currentRole==='owner'){
+        const del=document.createElement('button');del.className='danger';del.textContent='Delete';del.onclick=()=>deleteProduct(p);actions.append(del);
+      }
+      tr.append(imageTd,nameTd,priceTd,stockTd,statusTd,actions);$('productsBody').append(tr);
+    }
+  }
+  function editProduct(p){
+    $('productId').value=p.id;$('name').value=p.name;$('price').value=p.price;$('category').value=p.category||'';
+    $('stock').value=p.stock;$('imageUrl').value=p.image_url||'';$('description').value=p.description||'';
+    $('active').value=String(p.is_active);$('formTitle').textContent='Product edit karein';$('saveProductBtn').textContent='Changes save karein';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  $('productForm').addEventListener('submit',async e=>{
+    e.preventDefault();
+    if(!client || !currentShopId){status('Pehle login karein.','error');return;}
+    const id=$('productId').value;
+    const row={name:$('name').value.trim(),price:Number($('price').value),category:$('category').value.trim()||'Clothing',
+      stock:Number($('stock').value),image_url:$('imageUrl').value.trim(),description:$('description').value.trim(),
+      is_active:$('active').value==='true',shop_id:currentShopId};
+    if(!row.name || !Number.isFinite(row.price) || row.price<0 || !Number.isInteger(row.stock) || row.stock<0){status('Name, valid price aur stock check karein.','error');return;}
+    $('saveProductBtn').disabled=true;
+    try{
+      const result=id
+        ? await client.from('products').update(row).eq('id',Number(id)).eq('shop_id',currentShopId)
+        : await client.from('products').insert(row);
+      if(result.error) throw result.error;
+      status(id?'Product update ho gaya.':'Product add ho gaya.','ok');clearForm();await loadProducts();
+    }catch(err){status('Save nahi hua: '+err.message,'error');}
+    finally{$('saveProductBtn').disabled=false;}
+  });
+  async function deleteProduct(p){
+    if(currentRole!=='owner'){status('Sirf owner product delete kar sakta hai.','error');return;}
+    if(!confirm('Kya aap "'+p.name+'" delete karna chahte hain?'))return;
+    const {error}=await client.from('products').delete().eq('id',p.id).eq('shop_id',currentShopId);
+    if(error){status('Delete nahi hua: '+error.message,'error');return;}
+    status('Product delete ho gaya.','ok');await loadProducts();
+  }
+  async function loadOrders(){
+    if(!client || !currentShopId)return;
+    $('ordersBody').innerHTML='<tr><td colspan="7">Orders load ho rahe hain…</td></tr>';
+    const {data,error}=await client.from('orders').select('id,customer_name,phone,address,city,state,pincode,items,total_amount,status,created_at').eq('shop_id',currentShopId).order('created_at',{ascending:false}).limit(100);
+    if(error){$('ordersBody').innerHTML='<tr><td colspan="7">Orders load nahi hue. SQL policies check karein.</td></tr>';status('Orders load nahi hue: '+error.message,'error');return;}
+    if(!data || !data.length){$('ordersBody').innerHTML='<tr><td colspan="7">Abhi koi order nahi hai.</td></tr>';return;}
+    $('ordersBody').innerHTML='';
+    for(const o of data){const tr=document.createElement('tr');const cells=[String(o.id).slice(0,8).toUpperCase(),`${o.customer_name} / ${o.phone}`,`${o.address}, ${o.city}, ${o.state} - ${o.pincode}`,(Array.isArray(o.items)?o.items:[]).map(x=>`${x.name||x.product_id} × ${x.quantity||x.qty||1}${x.size?' ('+x.size+')':''}`).join(', '),'₹'+Number(o.total_amount).toLocaleString('en-IN')];for(const value of cells){const td=document.createElement('td');td.textContent=value;tr.append(td)}const statusTd=document.createElement('td');const sel=document.createElement('select');['Pending','Confirmed','Shipped','Delivered','Cancelled'].forEach(s=>{const op=document.createElement('option');op.value=s;op.textContent=s;sel.append(op)});sel.value=o.status;sel.disabled=currentRole!=='owner';statusTd.append(sel);tr.append(statusTd);const actTd=document.createElement('td');const saveBtn=document.createElement('button');saveBtn.textContent='Save';saveBtn.className='secondary';saveBtn.disabled=currentRole!=='owner';saveBtn.onclick=async()=>{saveBtn.disabled=true;const {error}=await client.from('orders').update({status:sel.value}).eq('id',o.id).eq('shop_id',currentShopId);if(error){status('Status update nahi hua: '+error.message,'error');saveBtn.disabled=false}else{status('Order status update ho gaya.','ok');saveBtn.disabled=false}};actTd.append(saveBtn);tr.append(actTd);$('ordersBody').append(tr)}
+  }
+  $('clearBtn').addEventListener('click',clearForm);
+  $('refreshBtn').addEventListener('click',loadProducts);
+  $('refreshOrdersBtn').addEventListener('click',loadOrders);
+  $('logoutBtn').addEventListener('click',async()=>{
+    if(client) await client.auth.signOut();
+    currentShopId=null;currentRole=null;show('productSection',false);show('loginCard',true);show('setup',true);show('logoutBtn',false);
+    $('password').value='';status('Logout ho gaye. Dobara connect karke login karein.');
+  });
+})();
+</script>
+</body>
+</html>
